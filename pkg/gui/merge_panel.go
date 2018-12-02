@@ -259,5 +259,9 @@ func (gui *Gui) handleCompleteMerge(g *gocui.Gui) error {
 	}
 	gui.stageSelectedFile(g)
 	gui.refreshFiles(g)
+	if rebase, err := gui.GitCommand.IsInRebaseState(); rebase && err == nil {
+		gui.GitCommand.ContinueRebaseBranch()
+		gui.refreshSidePanels(g)
+	}
 	return gui.switchFocus(g, nil, filesView)
 }
