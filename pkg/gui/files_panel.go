@@ -219,7 +219,7 @@ func (gui *Gui) handleFileSelect(g *gocui.Gui, v *gocui.View) error {
 }
 
 func (gui *Gui) handleCommitPress(g *gocui.Gui, filesView *gocui.View) error {
-	if len(gui.stagedFiles()) == 0 && !gui.State.HasMergeConflicts {
+	if len(gui.stagedFiles()) == 0 && gui.State.WorkingTreeState == "normal" {
 		return gui.createErrorPanel(g, gui.Tr.SLocalize("NoStagedFilesToCommit"))
 	}
 	commitMessageView := gui.getCommitMessageView(g)
@@ -233,7 +233,7 @@ func (gui *Gui) handleCommitPress(g *gocui.Gui, filesView *gocui.View) error {
 }
 
 func (gui *Gui) handleAmendCommitPress(g *gocui.Gui, filesView *gocui.View) error {
-	if len(gui.stagedFiles()) == 0 && !gui.State.HasMergeConflicts {
+	if len(gui.stagedFiles()) == 0 && gui.State.WorkingTreeState == "normal" {
 		return gui.createErrorPanel(g, gui.Tr.SLocalize("NoStagedFilesToCommit"))
 	}
 	title := strings.Title(gui.Tr.SLocalize("AmendLastCommit"))
@@ -257,7 +257,7 @@ func (gui *Gui) handleAmendCommitPress(g *gocui.Gui, filesView *gocui.View) erro
 // handleCommitEditorPress - handle when the user wants to commit changes via
 // their editor rather than via the popup panel
 func (gui *Gui) handleCommitEditorPress(g *gocui.Gui, filesView *gocui.View) error {
-	if len(gui.stagedFiles()) == 0 && !gui.State.HasMergeConflicts {
+	if len(gui.stagedFiles()) == 0 && gui.State.WorkingTreeState == "normal" {
 		return gui.createErrorPanel(g, gui.Tr.SLocalize("NoStagedFilesToCommit"))
 	}
 	gui.PrepareSubProcess(g, "git", "commit")
@@ -309,15 +309,27 @@ func (gui *Gui) refreshStateFiles() {
 	// get files to stage
 	files := gui.GitCommand.GetStatusFiles()
 	gui.State.Files = gui.GitCommand.MergeStatusFiles(gui.State.Files, files)
-	gui.updateHasMergeConflictStatus()
+	gui.updateWorkTreeState()
 }
 
-func (gui *Gui) updateHasMergeConflictStatus() error {
+func (gui *Gui) updateWorkTreeState() error {
 	merging, err := gui.GitCommand.IsInMergeState()
 	if err != nil {
 		return err
 	}
-	gui.State.HasMergeConflicts = merging
+	if merging {
+		gui.State.WorkingTreeState = "merging"
+		return nil
+	}
+	rebasing, err := gui.GitCommand.IsInRebaseState()
+	if err != nil {
+		return err
+	}
+	if rebasing {
+		gui.State.WorkingTreeState = "rebasing"
+		return nil
+	}
+	gui.State.WorkingTreeState = "normal"
 	return nil
 }
 

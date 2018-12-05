@@ -80,19 +80,19 @@ type stagingState struct {
 }
 
 type guiState struct {
-	Files             []*commands.File
-	Branches          []*commands.Branch
-	Commits           []*commands.Commit
-	StashEntries      []*commands.StashEntry
-	PreviousView      string
-	HasMergeConflicts bool
-	ConflictIndex     int
-	ConflictTop       bool
-	Conflicts         []commands.Conflict
-	EditHistory       *stack.Stack
-	Platform          commands.Platform
-	Updating          bool
-	StagingState      *stagingState
+	Files            []*commands.File
+	Branches         []*commands.Branch
+	Commits          []*commands.Commit
+	StashEntries     []*commands.StashEntry
+	PreviousView     string
+	WorkingTreeState string // one of "normal", "merging", and "rebasing"
+	ConflictIndex    int
+	ConflictTop      bool
+	Conflicts        []commands.Conflict
+	EditHistory      *stack.Stack
+	Platform         commands.Platform
+	Updating         bool
+	StagingState     *stagingState
 }
 
 // NewGui builds a new gui handler

@@ -25,11 +25,14 @@ func (gui *Gui) handleRebase(g *gocui.Gui, v *gocui.View) error {
 
 			if err := gui.GitCommand.RebaseBranch(selectedBranch); err != nil {
 				gui.Log.Errorln(err)
-				if err := gui.createConfirmationPanel(g, v, "Rebase failed", "Rebasing failed, would you like to resolve it?",
+				if err := gui.createConfirmationPanel(g, v, "Rebase failed", "Damn, conflicts! To abort press 'esc', otherwise press 'enter'",
 					func(g *gocui.Gui, v *gocui.View) error {
 						return nil
 					}, func(g *gocui.Gui, v *gocui.View) error {
-						return gui.GitCommand.AbortRebaseBranch()
+						if err := gui.GitCommand.AbortRebaseBranch(); err != nil {
+							return err
+						}
+						return gui.refreshSidePanels(g)
 					}); err != nil {
 					gui.Log.Errorln(err)
 				}
